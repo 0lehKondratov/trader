@@ -1,0 +1,35 @@
+//@version=5
+indicator("Commodity Channel Index with Smoothing", shorttitle="CCI-Smooth", format=format.price, precision=2)
+
+
+// Input parameters
+length = input.int(20, "Length", minval=1)
+src = input(close, "Source") // Using 'close' as the default source for simplicity
+typeMA = input.string("SMA", "Smoothing Method", options=["SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"])
+smoothingLength = input.int(5, "Smoothing Length", minval=1)
+
+// CCI calculation
+ma = ta.sma(src, length)
+deviation = 0.015 * ta.dev(src, length)
+cci = (src - ma) / deviation
+plot(cci, "CCI", color=color.new(#2962FF, 0))
+
+// Smoothing function definition
+maFunc(source, length, type) =>
+    switch type
+        "SMA" => ta.sma(source, length)
+        "EMA" => ta.ema(source, length)
+        "SMMA (RMA)" => ta.rma(source, length)
+        "WMA" => ta.wma(source, length)
+        "VWMA" => ta.vwma(source, length)
+
+// Applying the smoothing function to CCI
+smoothingLine = maFunc(cci, smoothingLength, typeMA)
+plot(smoothingLine, "Smoothing Line", color=#f37f20)
+
+// Horizontal lines and background
+band1 = hline(100, "Upper Band", color=color.new(#787B86, 0), linestyle=hline.style_dashed)
+band0 = hline(-100, "Lower Band", color=color.new(#787B86, 0), linestyle=hline.style_dashed)
+hline(0, "Zero Line", color=color.new(#787B86, 50))
+fill(band1, band0, color=color.rgb(33, 150, 243, 90), title="Background")
+
